@@ -9,7 +9,6 @@ set "PYTHON_SCRIPT=C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Scripting\Anomaly.p
 scp %PI_USER%@%PI_HOST%:%PI_PATH%*.pcapng %LOCAL_PATH%
 
 :: Run the Python script on the downloaded pcapng file
-:: Here, we're assuming you're processing the latest file each time
 for /r %LOCAL_PATH% %%a in (*.pcapng) do (
     set "LATEST_PCAP=%%a"
 )
