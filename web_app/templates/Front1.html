@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Net Guard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles1.css') }}">
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo-and-name">
+      <img src="{{ url_for('static', filename='net_guard_logo_resized.png') }}" alt="Net Guard Logo" class="logo">
+      <h1 class="web-app-name">Net Guard</h1>
+    </div>
+    <nav class="top-nav">
+      <ul>
+        <li><a href="/about-us">About Us</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="stats-container">
+    <div class="stat-box">
+      <h3>Top Speakers</h3>
+      <ul>
+        {% for entry in top_ips %}
+          <li>{{ entry.ip }} - {{ entry.count }} packets</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="stat-box">
+      <h3>Top Protocols</h3>
+      <ul>
+        {% for entry in top_protocols %}
+          <li>{{ entry.protocol }} - {{ entry.count }} packets</li>
+        {% endfor %}
+      </ul>
+    </div>
+    
+    <section class="throughput-container">
+      <h2>Network Throughput (Mbps)</h2>
+      <div>Current Throughput: {{ throughput }} Mbps</div>
+    </section>
+  </div>
+
+  <div class="logs-container">
+    <div class="log-box">
+      <h3>Security Log</h3>
+      {% if security_logs %}
+        <ul class="security-log-list">
+          {% for log in security_logs %}
+            <li class="security-log-item">{{ log }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div>No security events detected.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <section class="chart-container">
+    <h2>Network Throughput Chart</h2>
+    <canvas id="throughputChart"></canvas>
+    <script>
+      var ctx = document.getElementById('throughputChart').getContext('2d');
+      var throughputChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: /* You will need to provide appropriate time labels based on your data processing */,
+          datasets: [{
+            label: 'Baseline Throughput',
+            data: {{ baseline_throughput | tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+          }, {
+            label: 'Comparison Throughput',
+            data: {{ comparison_throughput | tojson }},
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    </script>
+  </section>
+</body>
+</html>
