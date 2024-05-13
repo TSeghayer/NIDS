@@ -103,17 +103,21 @@ class AnomalyDetector:
             self.anomalies.append("Significant throughput anomaly detected.")
 
     def check_bandwidth_anomaly(self):
-        """
-        Checks for significant changes in bandwidth usage between the baseline and comparison data.
-        Considers both maximum and minimum bandwidth values for anomaly detection.
-        """
-        baseline_max, baseline_min = self.baseline_data['bandwidth']
-        comparison_max, comparison_min = self.baseline_data['bandwidth']
-        max_change = abs(baseline_max - comparison_max)
-        min_change = abs(baseline_min - comparison_min)
-
-        if max_change > baseline_max * self.threshold or min_change > baseline_min * self.threshold:
-            self.anomalies.append("Bandwidth anomalies detected.")
+            """
+            Checks for significant changes in bandwidth usage between the baseline and comparison data.
+            Considers both maximum and minimum bandwidth values for anomaly detection.
+            """
+            baseline_max, baseline_min = self.baseline_data['bandwidth']
+            comparison_max, comparison_min = self.comparison_data['bandwidth']
+            max_change = abs(Decimal(baseline_max) - Decimal(comparison_max))
+            min_change = abs(Decimal(baseline_min) - Decimal(comparison_min))
+    
+            # Ensure the threshold is a Decimal object
+            threshold_decimal = Decimal(str(self.threshold))
+    
+            # Compare using Decimal types
+            if max_change > Decimal(baseline_max) * threshold_decimal or min_change > Decimal(baseline_min) * threshold_decimal:
+                self.anomalies.append("Bandwidth anomalies detected.")
 
 class NetworkAnalysis:
     """
