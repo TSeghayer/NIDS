@@ -26,8 +26,6 @@ def index():
     The main page route that fetches and displays network analysis data.
     The data includes throughput, top IP addresses, top protocols, and any security logs related to anomalies.
     """
-    # Fetches throughput for baseline and comparison from the DataProcessor.
-    baseline_throughput, comparison_throughput = data_processor.get_throughputs()
 
     # Retrieves top IPs and protocols from the comparison packets for visualization.
     top_ips = data_processor.get_top_ips(data_processor.comparison_packets)
@@ -36,6 +34,14 @@ def index():
     # Gets security logs, which would include details of any detected anomalies.
     security_logs = data_processor.get_security_logs()
 
+    # Fetches throughput for baseline and comparison from the DataProcessor.
+    baseline_throughput, comparison_throughput = data_processor.get_throughput_data()
+
+    # Get throughput over time data for both packet sets
+    baseline_time_labels, baseline_throughput_series = data_processor.calculate_throughput_over_time(data_processor.baseline_packets)
+    comparison_time_labels, comparison_throughput_series = data_processor.calculate_throughput_over_time(data_processor.comparison_packets)
+
+
     # Renders the Front1.html template, passing in all the fetched data for display on the webpage.
     return render_template(
         'Front1.html',
@@ -43,7 +49,10 @@ def index():
         top_protocols=top_protocols,
         security_logs=security_logs,
         baseline_throughput=baseline_throughput,
-        comparison_throughput=comparison_throughput
+        comparison_throughput=comparison_throughput,
+        time_labels=baseline_time_labels, 
+        baseline_throughput_series=baseline_throughput_series,
+        comparison_throughput_series=comparison_throughput_series
     )
 
 @app.route('/about-us')

@@ -252,39 +252,51 @@ class DataProcessor:
         latest_file_path = max(pcap_files, key=os.path.getmtime)
         return rdpcap(latest_file_path) if latest_file_path else None
 
-    def calculate_throughput(self):
-        """Calculates the total throughput of the loaded packets in kilobits per second (kbps)."""
-        if not self.packets:
-            return 0
-        total_bytes = sum(len(packet) for packet in self.packets)
-        duration = max(packet.time for packet in self.packets) - min(packet.time for packet in self.packets)
-        if duration == 0:
-            return 0
-        return (total_bytes * 8) / (duration * 1000)
-
-    def calculate_throughput_per_minute(self, packets):
-        """Calculates the throughput per minute for a set of packets, returning it in kilobits per second."""
+    def calculate_throughput(self, packets):
+        """Calculates the total throughput of the provided packets in kilobits per second (kbps)."""
         if not packets:
-            return []
-        throughput_results = []
-        total_bytes = 0
+            return Decimal('0.000')
+        total_bytes = sum(len(packet) for packet in packets)
+        duration = Decimal(packets[-1].time) - Decimal(packets[0].time)
+        if duration == 0:
+            return Decimal('0.000')
+        return (Decimal(total_bytes) * Decimal(8) / (Decimal(1000) * duration)).quantize(Decimal('0.001'))
+
+    def calculate_throughput_over_time(self, packets):
+        """Calculates throughput over time, returning results per minute."""
+        if not packets:
+            return [], []
+        
         start_time = Decimal(packets[0].time)
         end_time = Decimal(packets[-1].time)
-        duration_minutes = (end_time - start_time) / Decimal(60)
+        interval = Decimal('60.0')  # 60 seconds
+        current_time = start_time
+        total_bytes = 0
+        throughputs = []
+        time_labels = []
     
         for packet in packets:
-            total_bytes += len(packet)
-        
-        if duration_minutes > 0:
-            throughput_kbps = (Decimal(total_bytes) * Decimal(8) / Decimal(1024)) / max(duration_minutes, Decimal(1))
-            throughput_results.append(throughput_kbps)
+            if Decimal(packet.time) < current_time + interval:
+                total_bytes += len(packet)
+            else:
+                throughput = (Decimal(total_bytes) * Decimal(8) / (Decimal(1000) * interval)).quantize(Decimal('0.001'))
+                throughputs.append(float(throughput))
+                time_labels.append(str(current_time))
+                current_time += interval
+                total_bytes = len(packet)  # Start counting next interval
     
-        return throughput_results
+        # Handle last interval if there's remaining data
+        if total_bytes > 0:
+            throughput = (Decimal(total_bytes) * Decimal(8) / (Decimal(1000) * (Decimal(packet.time) - current_time))).quantize(Decimal('0.001'))
+            throughputs.append(float(throughput))
+            time_labels.append(str(current_time))
     
-    def get_throughputs(self):
-        """Calculates and returns throughput per minute for both the baseline and the comparison packets."""
-        baseline_throughput = self.calculate_throughput_per_minute(self.baseline_packets)
-        comparison_throughput = self.calculate_throughput_per_minute(self.comparison_packets)
+        return time_labels, throughputs
+    
+    def get_throughput_data(self):
+        """Returns the throughput for both baseline and comparison packets."""
+        baseline_throughput = self.calculate_throughput(self.baseline_packets)
+        comparison_throughput = self.calculate_throughput(self.comparison_packets)
         return baseline_throughput, comparison_throughput
 
     def get_security_logs(self):

@@ -39,8 +39,11 @@
     </div>
     
     <section class="throughput-container">
-      <h2>Network Throughput (Mbps)</h2>
-      <div>Current Throughput: {{ throughput }} Mbps</div>
+      <div class="stat-box">
+        <h2>Network Throughput</h2>
+        <div>Baseline Throughput: {{ baseline_throughput }} kbps</div>
+        <div>Current Throughput: {{ comparison_throughput }} kbps</div>
+      </div>
     </section>
   </div>
 
@@ -67,15 +70,15 @@
       var throughputChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: /* You will need to provide appropriate time labels based on your data processing */,
+          labels: {{ time_labels | tojson }},
           datasets: [{
             label: 'Baseline Throughput',
-            data: {{ baseline_throughput | tojson }},
+            data: {{ baseline_throughput_series | tojson }},
             borderColor: 'rgb(75, 192, 192)',
             tension: 0.1
           }, {
             label: 'Comparison Throughput',
-            data: {{ comparison_throughput | tojson }},
+            data: {{ comparison_throughput_series | tojson }},
             borderColor: 'rgb(255, 99, 132)',
             tension: 0.1
           }]
@@ -90,5 +93,6 @@
       });
     </script>
   </section>
+
 </body>
 </html>
