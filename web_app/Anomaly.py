@@ -1,6 +1,6 @@
 import os
 from scapy.all import rdpcap, IP
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 from datetime import datetime
 from collections import Counter
 
@@ -263,36 +263,34 @@ class DataProcessor:
         return (Decimal(total_bytes) * Decimal(8) / (Decimal(1000) * duration)).quantize(Decimal('0.001'))
 
     def calculate_throughput_over_time(self, packets):
-        """Calculates throughput over time, returning results per minute."""
         if not packets:
             return [], []
-        
+
+        results = []
         start_time = Decimal(packets[0].time)
         end_time = Decimal(packets[-1].time)
-        interval = Decimal('60.0')  # 60 seconds
+        interval = Decimal('60.0')  # Assuming 60 seconds for each interval
         current_time = start_time
         total_bytes = 0
-        throughputs = []
         time_labels = []
-    
+
         for packet in packets:
             if Decimal(packet.time) < current_time + interval:
                 total_bytes += len(packet)
             else:
                 throughput = (Decimal(total_bytes) * Decimal(8) / (Decimal(1000) * interval)).quantize(Decimal('0.001'))
-                throughputs.append(float(throughput))
-                time_labels.append(str(current_time))
+                results.append(float(throughput))
+                time_labels.append(datetime.fromtimestamp(float(current_time)).strftime('%Y-%m-%d %H:%M:%S'))
                 current_time += interval
-                total_bytes = len(packet)  # Start counting next interval
-    
-        # Handle last interval if there's remaining data
+                total_bytes = len(packet)  # Start new interval
+
+        # Handling last interval
         if total_bytes > 0:
             throughput = (Decimal(total_bytes) * Decimal(8) / (Decimal(1000) * (Decimal(packet.time) - current_time))).quantize(Decimal('0.001'))
-            throughputs.append(float(throughput))
-            time_labels.append(str(current_time))
-    
-        return time_labels, throughputs
-    
+            results.append(float(throughput))
+            time_labels.append(datetime.fromtimestamp(float(current_time)).strftime('%Y-%m-%d %H:%M:%S'))
+
+        return time_labels, results   
     def get_throughput_data(self):
         """Returns the throughput for both baseline and comparison packets."""
         baseline_throughput = self.calculate_throughput(self.baseline_packets)
@@ -338,7 +336,7 @@ if __name__ == "__main__":
     # Initialize the NetworkAnalysis class with paths to the baseline and comparison PCAP files.
     # An EmailNotifier instance is passed to enable email notifications upon detecting network anomalies.
     analysis = NetworkAnalysis(
-        baseline_path=r'C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Full\1Order.pcapng',
+        baseline_path=r'C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Home_net\Baseline_home.pcapng',
         comparison_dir=r'C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Pi_packets',
         notifier=email_notifier  # Pass the instantiated EmailNotifier to the analysis class.
     )
@@ -352,7 +350,7 @@ if __name__ == "__main__":
     # This allows the DataProcessor to access detected anomalies for further processing or reporting.
     data_processor = DataProcessor(
         comparison_dir=r'C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Pi_packets',
-        baseline_path=r'C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Full\1Order.pcapng',
+        baseline_path=r'C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Running\running.pcapng',
         anomaly_detector=analysis.detector  # Passing the anomaly detector to link both analysis processes.
     )
     

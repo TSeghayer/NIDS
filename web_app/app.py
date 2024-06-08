@@ -1,11 +1,13 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template
 from Anomaly import NetworkAnalysis, DataProcessor
+from datetime import datetime 
+
 
 app = Flask(__name__)
 
 # Configuration for pcap files and baseline
 PCAP_DIR = r"C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Pi_packets"
-BASELINE_PCAP = r"C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Full\1Order.pcapng"
+BASELINE_PCAP = r"C:\Users\taha\OneDrive\Desktop\FYP_SWITCH\Packets\Home_net\Baseline_home.pcapng"
 
 # Initialize the classes
 # The NetworkAnalysis instance is set up with paths to the baseline and comparison pcap directories.
@@ -19,6 +21,10 @@ network_analysis.perform_analysis()
 # Initialize DataProcessor with the anomaly detector from the analysis
 # DataProcessor is used for processing network data to fetch various statistics and anomalies for visualization.
 data_processor = DataProcessor(comparison_dir=PCAP_DIR, baseline_path=BASELINE_PCAP, anomaly_detector=network_analysis.detector)
+
+def format_timestamps(timestamps):
+    """Converts list of timestamps (assumed to be in seconds) into formatted date-time strings."""
+    return [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in timestamps]
 
 @app.route('/')
 def index():
@@ -67,4 +73,3 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-"""  IMPLEMNT UNITTESTING FOR TESTING AND VALIDATION """
